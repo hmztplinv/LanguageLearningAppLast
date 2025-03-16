@@ -46,6 +46,18 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString);
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000") 
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
+        });
+});
+
 // Token Service kaydı
 builder.Services.AddScoped<ITokenService, TokenService>();
 
@@ -98,7 +110,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseCors("AllowReactApp");
 // Kimlik doğrulama / yetkilendirme
 app.UseAuthentication();
 app.UseAuthorization();

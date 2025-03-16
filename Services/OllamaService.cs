@@ -21,16 +21,20 @@ namespace LanguageLearningApp.Services
         public async Task<string> GetAssistantReplyAsync(string prompt)
         {
             // Ollama endpoint'i
-            var requestUrl = "http://localhost:11434/api/generate"; 
+            var requestUrl = "http://localhost:11434/api/generate";
             // Ollama parametreleri
             var requestBody = new
             {
-                prompt = prompt
+                prompt = prompt,
+                model = "llama2:13b-chat",
+                stream = false
             };
             var json = JsonSerializer.Serialize(requestBody);
 
-            var requestMessage = new HttpRequestMessage(HttpMethod.Post, requestUrl);
-            requestMessage.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, "http://localhost:11434/api/generate")
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
 
             var response = await _httpClient.SendAsync(requestMessage);
             response.EnsureSuccessStatusCode();

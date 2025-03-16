@@ -50,14 +50,14 @@ public async Task<IActionResult> CreateMessage(int conversationId, [FromBody] Cr
 {
     var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-    // 1) Kullanıcı bu konuşmaya gerçekten sahip mi?
+    // 1) Kullanıcı bu konuşmaya ait mi?
     var conversation = await _context.Conversations
         .FirstOrDefaultAsync(c => c.Id == conversationId && c.UserId == userId);
 
     if (conversation == null)
         return NotFound("Conversation not found or you don't have access.");
 
-    // 2) Kullanıcı mesajını kaydet
+    // 2) Kullanıcı mesajını (role=user) DB'ye kaydet
     var userMessage = new Message
     {
         ConversationId = conversationId,
@@ -66,45 +66,37 @@ public async Task<IActionResult> CreateMessage(int conversationId, [FromBody] Cr
         Content = model.Content,
         CreatedAt = DateTime.UtcNow
     };
-
     _context.Messages.Add(userMessage);
     await _context.SaveChangesAsync();
 
-    // 3) Kısa hafıza: Son X mesajı çek (mesela 10)
+    // 3) Son X mesajı çek (ör. 10) ve prompt oluştur
     var lastMessages = await _context.Messages
         .Where(m => m.ConversationId == conversationId)
         .OrderByDescending(m => m.CreatedAt)
         .Take(10)
         .ToListAsync();
 
-    // Zaman sırasını düzelt (eskiden yeniye)
-    lastMessages = lastMessages.OrderBy(m => m.CreatedAt).ToList();
+    lastMessages = lastMessages.OrderBy(m => m.CreatedAt).ToList(); // eskiden yeniye sıralayalım
 
-    // 4) Prompt oluştur: user / assistant sırasıyla
     var promptBuilder = new StringBuilder();
 
-    var systemPrompt = "You are an English teacher. Correct grammar mistakes and clarify the user's misunderstandings.";
-    promptBuilder.AppendLine($"System: {systemPrompt}");
-
+    // (isteğe bağlı) system prompt
+    promptBuilder.AppendLine($"System: You are an English teacher. Correct grammar mistakes...");
     foreach (var msg in lastMessages)
     {
         if (msg.Role == "user")
-        {
             promptBuilder.AppendLine($"User: {msg.Content}");
-        }
         else
-        {
             promptBuilder.AppendLine($"Assistant: {msg.Content}");
-        }
     }
-    promptBuilder.AppendLine("Assistant:"); // Modelin devam edeceği kısım
+    promptBuilder.AppendLine("Assistant:");
 
     var prompt = promptBuilder.ToString();
 
-    // 5) LLM'i çağır
+    // 4) LLM'e istek
     var assistantReply = await _llmService.GetAssistantReplyAsync(prompt);
 
-    // 6) Asistan mesajı kaydet
+    // 5) Asistan mesajını (role=assistant) DB'ye kaydet
     var assistantMessage = new Message
     {
         ConversationId = conversationId,
@@ -115,8 +107,13 @@ public async Task<IActionResult> CreateMessage(int conversationId, [FromBody] Cr
     _context.Messages.Add(assistantMessage);
     await _context.SaveChangesAsync();
 
-    // 7) Kullanıcıya asistan cevabını dön (veya tüm konuşmayı dönebilirsiniz)
-    return Ok(new { userMessage = userMessage.Content, assistantMessage = assistantReply });
+    // 6) İsteğe bağlı: Kullanıcıya dönülecek veriler
+    return Ok(new
+    {
+        userMessage = userMessage.Content,
+        assistantMessage = assistantMessage.Content
+    });
 }
+
 
 }
