@@ -81,7 +81,11 @@ public async Task<IActionResult> CreateMessage(int conversationId, [FromBody] Cr
     var promptBuilder = new StringBuilder();
 
     // (isteğe bağlı) system prompt
-    promptBuilder.AppendLine($"System: You are an English teacher. Correct grammar mistakes...");
+    promptBuilder.AppendLine("System: You are a friendly English teacher. Provide concise corrections and suggestions without repeating previous messages.");
+
+
+    //promptBuilder.AppendLine("System: You are a friendly English teacher. Provide clear and concise corrections to the user's sentences without repeating previous conversation parts. Keep your response gentle and to the point.");
+    //promptBuilder.AppendLine("System: The user is a beginner English learner. They are trying to improve their English skills. They are eager to learn and improve their language skills.");
     foreach (var msg in lastMessages)
     {
         if (msg.Role == "user")
