@@ -13,7 +13,8 @@ namespace LanguageLearningApp.Data
         public DbSet<Conversation> Conversations { get; set; } 
         public DbSet<Message> Messages { get; set; }
 
-        // Ek tablolar eklendikçe burada tanımlarsınız.
+        public DbSet<User> Users { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

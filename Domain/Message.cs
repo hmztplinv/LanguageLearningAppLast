@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace LanguageLearningApp.Domain
 {
@@ -11,6 +12,7 @@ namespace LanguageLearningApp.Domain
         // Foreign Key
         public int ConversationId { get; set; }
         [ForeignKey(nameof(ConversationId))]
+        [JsonIgnore]
         public Conversation Conversation { get; set; }
 
         // Kim gönderdi? (Kullanıcı ID, asistan mesajıysa null olabilir veya "Sistem" rolu vs.)
@@ -23,7 +25,7 @@ namespace LanguageLearningApp.Domain
         [Required]
         public string Content { get; set; }
 
-        public string ErrorAnalysis { get; set; }
+        public string? ErrorAnalysis { get; set; }
 
         public bool IsCorrected { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
