@@ -1,0 +1,14 @@
+# Build output 
+bin/
+obj/
+
+# user-specific files
+*.user
+*.suo
+.vs/
+
+# Visual Studio 2015 cache/options directory
+*.dll
+*.pdb
+*.exe
+*.log
